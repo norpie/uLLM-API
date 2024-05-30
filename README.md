@@ -1,4 +1,4 @@
-# µLLM-A
+# µLLM-API
 Micro LLM API
 
 > Aiming to be the smallest, yet featureful LLM backend.
