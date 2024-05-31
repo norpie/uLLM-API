@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 
 class DataDir:
@@ -12,7 +13,7 @@ class DataDir:
     def get_root(self):
         return self.data_dir
 
-    def get_model_dir(self):
+    def get_model_path(self):
         if not os.path.exists(os.path.join(self.data_dir, "models")):
             os.makedirs(os.path.join(self.data_dir, "models"))
-        return os.path.join(self.data_dir, "models")
+        return Path(os.path.join(self.data_dir, "models"))
