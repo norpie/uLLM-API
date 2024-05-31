@@ -17,7 +17,7 @@ class Engine:
         raise NotImplementedError
 
     def complete(self, prompt):
-        raise NotImplementedError
+        return self.complete_streaming(prompt, None)
 
     def complete_streaming(self, prompt, streaming_callback):
         raise NotImplementedError

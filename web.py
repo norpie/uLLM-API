@@ -1,5 +1,10 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 import uvicorn
+
+
+class CompletionRequest(BaseModel):
+    text: str
 
 
 def run(host, port, model_manager):
@@ -20,5 +25,20 @@ def run(host, port, model_manager):
             return {"status": "loading"}
         except ValueError as e:
             return {"error": str(e)}
+
+    @app.delete("/models")
+    def unload_model():
+        engine = model_manager.current_engine()
+        if engine is None:
+            return {"error": "No model loaded"}
+        engine.unload_model()
+        return {"status": "unloaded"}
+
+    @app.get("/complete")
+    def complete(req: CompletionRequest):
+        engine = model_manager.current_engine()
+        if engine is None:
+            return {"error": "No model loaded"}
+        return {"completion": engine.complete(req.text)}
 
     uvicorn.run(app, host=host, port=port)

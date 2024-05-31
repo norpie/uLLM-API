@@ -1,4 +1,3 @@
-from engines.engine import Engine
 from engines.exllamav2 import ExLlamaV2Engine
 
 class ModelManager:
@@ -10,8 +9,8 @@ class ModelManager:
         if model_name not in self.list_models():
             raise ValueError(f"Model {model_name} not found")
 
-        engine = self.get_engine(engine, self.data_dir.get_model_path() / model_name)
-        engine.load_model()
+        self.engine = self.get_engine(engine, self.data_dir.get_model_path() / model_name)
+        self.engine.load_model()
 
     def list_models(self):
         model_path = self.data_dir.get_model_path()
