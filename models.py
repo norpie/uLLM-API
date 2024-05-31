@@ -3,5 +3,5 @@ class ModelManager:
         self.data_dir = data_dir
 
     def list_models(self):
-        print("Listing models in {}".format(self.data_dir.get_model_dir()))
-        return self.data_dir.get_model_dir()
+        model_path = self.data_dir.get_model_path()
+        return [f.name for f in model_path.iterdir() if f.is_dir()]
