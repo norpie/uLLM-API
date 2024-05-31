@@ -7,5 +7,5 @@ app = FastAPI()
 def ping():
     return "pong"
 
-def run(host, port, data_dir):
+def run(host, port, model_manager):
     uvicorn.run(app, host=host, port=port)
