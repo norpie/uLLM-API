@@ -12,7 +12,7 @@ class DataDir:
     def get_root(self):
         return self.data_dir
 
-    def get_models_dir(self):
+    def get_model_dir(self):
         if not os.path.exists(os.path.join(self.data_dir, "models")):
             os.makedirs(os.path.join(self.data_dir, "models"))
         return os.path.join(self.data_dir, "models")
