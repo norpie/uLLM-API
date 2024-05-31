@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+rich
+tokenizers
+https://download.pytorch.org/whl/pytorch_triton_rocm-2.3.0-cp311-cp311-linux_x86_64.whl#sha256=7436e28062a22e95d708c95b97ba7d3f63a896df4fd5145ebfc4700c4df2d186
+https://download.pytorch.org/whl/rocm6.0/torch-2.3.0%2Brocm6.0-cp311-cp311-linux_x86_64.whl#sha256=fc3cc0638a43db03f06ca5aae4b759c8ea53733aec64ab009c2cae04e4e121db
+# https://github.com/turboderp/exllamav2/releases/download/v0.1.1/exllamav2-0.1.1+rocm6.0.torch2.3.0-cp311-cp311-linux_x86_64.whl
+https://github.com/turboderp/exllamav2/releases/download/v0.0.21/exllamav2-0.0.21+rocm6.0-cp311-cp311-linux_x86_64.whl
