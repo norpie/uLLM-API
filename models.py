@@ -1,3 +1,6 @@
+from engines.engine import Engine
+from engines.exllamav2 import ExLlamaV2Engine
+
 class ModelManager:
     def __init__(self, data_dir):
         self.data_dir = data_dir
@@ -19,31 +22,6 @@ class ModelManager:
 
     def get_engine(self, engine, path):
         if engine == "exllamav2":
-            return Engine(path)
+            return ExLlamaV2Engine(path)
         else:
             raise ValueError(f"Unknown engine: {engine}")
-
-
-class Engine:
-    def __init__(self, path):
-        self.path = path
-        self.parameters = None
-
-    def set_parameters(self, parameters):
-        self.parameters = parameters
-
-    def reload_model(self):
-        self.unload_model()
-        self.load_model()
-
-    def load_model(self):
-        raise NotImplementedError
-
-    def unload_model(self):
-        raise NotImplementedError
-
-    def complete(self, prompt):
-        raise NotImplementedError
-
-    def complete_streaming(self, prompt, streaming_callback):
-        raise NotImplementedError
