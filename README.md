@@ -1,7 +1,7 @@
 # µLLM-API
 Micro LLM API
 
-> Aiming to be the smallest, yet featureful LLM backend.
+> Aiming to be a small, yet featureful LLM backend.
 
 # Features
 - [ ] Quick model switching
