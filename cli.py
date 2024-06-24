@@ -12,13 +12,27 @@ def parse():
         help="The host to run the server on. (0.0.0.0 for all interfaces)",
     )
     parser.add_argument(
+        "--http",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Whether to run the http server.",
+    )
+    parser.add_argument(
         "--http-port",
         type=int,
         default=8080,
         help="The port to run the http server on.",
     )
     parser.add_argument(
-        "--ws-port",
+        "--sockets",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Whether to run the websocket server.",
+    )
+    parser.add_argument(
+        "--sockets-port",
         type=str,
         default=8081,
         help="The port to run the websocket server on.",
