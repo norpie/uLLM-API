@@ -1,6 +1,7 @@
 import cli
 import data
 import models
+import time
 import http_server
 import sockets_server
 
@@ -13,6 +14,7 @@ def main():
         http_server.start(args.host, args.http_port, model_manager)
     if args.sockets:
         sockets_server.start(args.host, args.sockets_port, model_manager)
+    time.sleep(1)
 
 
 if __name__ == "__main__":
