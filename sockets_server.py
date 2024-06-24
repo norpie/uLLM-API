@@ -28,7 +28,7 @@ async def complete_handler(websocket, id, snippet, model_manager):
     await respond(websocket, id, {"status": "final", "tokens": final})
 
 
-async def echo_handler(websocket, _, model_manager):
+async def handler(websocket, _, model_manager):
     async for message in websocket:
         try:
             parsed = json.loads(message)
@@ -67,7 +67,7 @@ def run(host, port, model_manager):
 
     server = loop.run_until_complete(
         websockets.serve(
-            lambda ws, path: echo_handler(ws, path, model_manager), host, port
+            lambda ws, path: handler(ws, path, model_manager), host, port
         )
     )
 
