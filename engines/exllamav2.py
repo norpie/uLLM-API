@@ -42,7 +42,7 @@ class ExLlamaV2Engine(Engine):
         self.generator = None
         self.settings = None
 
-    def complete_streaming(self, prompt, streaming_callback):
+    async def complete_streaming(self, prompt, streaming_callback):
         if self.generator is None or self.settings is None or self.tokenizer is None:
             return "No model loaded"
 
@@ -62,7 +62,7 @@ class ExLlamaV2Engine(Engine):
             generated += 1
 
             if streaming_callback:
-                streaming_callback(chunk)
+                await streaming_callback(chunk)
 
             print(chunk, end="", flush=True)
             if eos or generated > 256:

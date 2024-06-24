@@ -16,8 +16,8 @@ class Engine:
     def unload_model(self):
         raise NotImplementedError
 
-    def complete(self, prompt):
-        return self.complete_streaming(prompt, None)
+    async def complete(self, prompt):
+        return await self.complete_streaming(prompt, None)
 
-    def complete_streaming(self, prompt, streaming_callback):
+    async def complete_streaming(self, prompt, streaming_callback):
         raise NotImplementedError
