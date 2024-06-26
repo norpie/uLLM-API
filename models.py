@@ -9,6 +9,9 @@ class ModelManager:
         if model_name not in self.list_models():
             raise ValueError(f"Model {model_name} not found")
 
+        if self.engine is not None:
+            self.engine.unload_model()
+
         self.engine = self.get_engine(engine, self.data_dir.get_model_path() / model_name)
         self.engine.load_model()
 
