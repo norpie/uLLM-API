@@ -51,7 +51,6 @@ class ExLlamaV2Engine(Engine):
             raise ValueError("Can't handle multiple input_ids")
         self.generator.begin_stream_ex(input_ids, self.settings)
 
-        print(prompt, end="", flush=True)
         completion = ""
         generated = 0
         while True:
@@ -64,7 +63,6 @@ class ExLlamaV2Engine(Engine):
             if streaming_callback:
                 await streaming_callback(chunk)
 
-            print(chunk, end="", flush=True)
             if eos or generated > 256:
                 break
         return completion
