@@ -60,7 +60,7 @@ class ExLlamaV2Engine(Engine):
             chunk, eos = res["chunk"], res["eos"]
 
             completion += chunk
-            generated += 1
+            generated += len(chunk)
 
             if streaming_callback:
                 await streaming_callback(chunk)
