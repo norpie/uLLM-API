@@ -1,3 +1,4 @@
+import time
 from engines.engine import Engine
 from exllamav2 import (
     ExLlamaV2,
@@ -44,7 +45,7 @@ class ExLlamaV2Engine(Engine):
 
     async def complete_streaming(self, prompt, streaming_callback):
         if self.generator is None or self.settings is None or self.tokenizer is None:
-            return "No model loaded"
+            raise RuntimeError("No model loaded")
 
         input_ids = self.tokenizer.encode(prompt, add_bos=True)
         if isinstance(input_ids, tuple):
@@ -53,6 +54,7 @@ class ExLlamaV2Engine(Engine):
 
         completion = ""
         generated = 0
+        time_start = time.time()
         while True:
             res = self.generator.stream_ex()
             chunk, eos = res["chunk"], res["eos"]
@@ -63,6 +65,8 @@ class ExLlamaV2Engine(Engine):
             if streaming_callback:
                 await streaming_callback(chunk)
 
-            if eos or generated > 256:
+            if eos:
                 break
+        time_end = time.time()
+        print(f"Generated {generated} tokens in {time_end - time_start:.2f}s at a rate of {generated / (time_end - time_start):.2f} tokens/s")
         return completion
