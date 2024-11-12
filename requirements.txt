@@ -1,9 +1,6 @@
+https://github.com/turboderp/exllamav2/releases/download/v0.0.21/exllamav2-0.0.21+rocm6.0-cp311-cp311-linux_x86_64.whl
 fastapi
 uvicorn
 rich
 tokenizers
-https://download.pytorch.org/whl/pytorch_triton_rocm-3.0.0-cp311-cp311-linux_x86_64.whl#sha256=cf51a22a814de8a9c52c05dc00c193b55cd9dca9020da1d204a40153b97305f5
-https://download.pytorch.org/whl/pytorch_triton-3.0.0-cp311-cp311-linux_x86_64.whl#sha256=16e78e49842401457ef1096e6958413e18b96478c43afec624b093c946b1c866
-# https://github.com/turboderp/exllamav2/releases/download/v0.1.1/exllamav2-0.1.1+rocm6.0.torch2.3.0-cp311-cp311-linux_x86_64.whl
-https://github.com/turboderp/exllamav2/releases/download/v0.0.21/exllamav2-0.0.21+rocm6.0-cp311-cp311-linux_x86_64.whl
 websockets
