@@ -1,5 +1,10 @@
-import websockets
+from websockets.asyncio.server import ServerConnection, serve
+from websockets.protocol import State
+from engines.engine import EngineParameters
+from models import ModelManager
+
 import asyncio
+import websockets
 import json
 
 
@@ -7,86 +12,99 @@ def ping():
     return "pong"
 
 
-async def respond_error(websocket, id, message):
+async def respond_error(websocket: ServerConnection, id: str | None, message: str):
     response = json.dumps({"id": id, "error": message})
-    if websocket.open:
+    if websocket.state == State.OPEN:
         await websocket.send("\n" + response)
 
 
-async def respond(websocket, id, result):
+async def respond(websocket: ServerConnection, id: str | None, result: dict):
     response = json.dumps({"id": id, "result": result})
-    if websocket.open:
+    if websocket.state == State.OPEN:
         await websocket.send("\n" + response)
 
 
-async def complete_handler(websocket, id, snippet, model_manager):
+async def complete_handler(
+    websocket: ServerConnection,
+    id: str,
+    snippet: str,
+    model_manager: ModelManager,
+):
     async def streaming_callback(tokens):
-        if websocket.open:
+        if websocket.state == State.OPEN:
             await respond(websocket, id, {"status": "ongoing", "tokens": tokens})
 
-    final = await model_manager.current_engine().complete_streaming(
+    current_engine = model_manager.current_engine()
+
+    if current_engine is None:
+        await respond_error(websocket, id, "No model loaded")
+        return
+
+    parameters = EngineParameters()
+    final = await current_engine.complete_streaming(
+        parameters,
         snippet,
         streaming_callback,
     )
-    if websocket.open:
+    if websocket.state == State.OPEN:
         await respond(websocket, id, {"status": "final", "tokens": final})
 
 
-async def handler(websocket, _, model_manager):
+async def handler(websocket: ServerConnection, model_manager: ModelManager):
     try:
         async for message in websocket:
             try:
                 parsed = json.loads(message)
-            except Exception as e:
-                await respond_error(websocket, None, f"JSON Decode error: {str(e)}")
-                continue
-            id = parsed.get("id")
-            params = parsed.get("params")
-            match parsed["method"]:
-                case "complete":
-                    await complete_handler(
-                        websocket, id, params["snippet"], model_manager
-                    )
-                case "ping":
-                    await respond(websocket, id, {"status": "pong"})
-                case "list_models":
-                    await respond(
-                        websocket, id, {"models": model_manager.list_models()}
-                    )
-                case "load_model":
-                    try:
+                id = parsed.get("id")
+                params = parsed.get("params")
+                match parsed["method"]:
+                    case "complete":
+                        await complete_handler(
+                            websocket, id, params["snippet"], model_manager
+                        )
+                    case "cancel":
+                        engine = model_manager.current_engine()
+                        if engine is not None:
+                            engine.cancel_streaming()
+                            await respond(websocket, id, {"status": "cancelled"})
+                        else:
+                            await respond_error(websocket, id, "No model loaded")
+                    case "ping":
+                        await respond(websocket, id, {"status": "pong"})
+                    case "status":
+                        await respond(
+                            websocket,
+                            id,
+                            {"status": model_manager.model_status()},
+                        )
+                    case "list_models":
+                        await respond(
+                            websocket, id, {"models": model_manager.list_models()}
+                        )
+                    case "load_model":
+                        await respond(
+                            websocket, id, {"status": model_manager.model_status()}
+                        )
                         model_manager.load_model(params["engine"], params["model"])
-                        await respond(websocket, id, {"status": "success"})
-                    except Exception as e:
-                        await respond_error(websocket, id, str(e))
-                case _:
-                    await respond_error(websocket, id, "Unknown method")
+                    case _:
+                        await respond_error(websocket, id, "Unknown method")
+            except Exception as e:
+                await respond_error(websocket, None, str(e))
     except websockets.exceptions.ConnectionClosedError:
         pass
 
 
-def start(host, port, model_manager):
+def start(host: str, port: int, model_manager: ModelManager):
     import threading
 
-    thread = threading.Thread(target=run, args=(host, port, model_manager))
+    thread = threading.Thread(target=task, args=(host, port, model_manager))
     thread.start()
 
 
-def run(host, port, model_manager):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+def task(host: str, port: int, model_manager: ModelManager):
+    return asyncio.run(run(host, port, model_manager))
 
-    server = loop.run_until_complete(
-        websockets.serve(lambda ws, path: handler(ws, path, model_manager), host, port)
-    )
 
-    print(f"WebSocket server started on {host}:{port}")
-
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        print("Server is shutting down...")
-    finally:
-        server.close()
-        loop.run_until_complete(server.wait_closed())
-        loop.close()
+async def run(host: str, port: int, model_manager: ModelManager):
+    server = await serve(lambda ws: handler(ws, model_manager), host, port)
+    await server.serve_forever()

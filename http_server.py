@@ -1,18 +1,22 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from models import ModelManager
+from engines.engine import EngineType, EngineParameters
 import uvicorn
 
 
 class CompletionRequest(BaseModel):
     text: str
 
-def start(host, port, model_manager):
+
+def start(host: str, port: int, model_manager: ModelManager):
     import threading
+
     thread = threading.Thread(target=run, args=(host, port, model_manager))
     thread.start()
 
 
-def run(host, port, model_manager):
+def run(host: str, port: int, model_manager: ModelManager):
     app = FastAPI()
 
     @app.get("/ping")
@@ -26,24 +30,23 @@ def run(host, port, model_manager):
     @app.post("/models/{engine}/{model_name}")
     def load_model(engine: str, model_name: str):
         try:
-            model_manager.load_model(engine, model_name)
-            return {"status": "loading"}
+            engine_type = EngineType[engine]
+            model_manager.load_model(engine_type, model_name)
+            return {"status": model_manager.model_status()}
         except ValueError as e:
             return {"error": str(e)}
 
     @app.delete("/models")
     def unload_model():
-        engine = model_manager.current_engine()
-        if engine is None:
-            return {"error": "No model loaded"}
-        engine.unload_model()
-        return {"status": "unloaded"}
+        model_manager.unload_model()
+        return {"status": model_manager.model_status()}
 
     @app.get("/complete")
     def complete(req: CompletionRequest):
         engine = model_manager.current_engine()
         if engine is None:
             return {"error": "No model loaded"}
-        return {"completion": engine.complete(req.text)}
+        parameters = EngineParameters()
+        return {"completion": engine.complete(parameters, req.text)}
 
     uvicorn.run(app, host=host, port=port)
