@@ -28,6 +28,7 @@ async def complete_handler(
     websocket: ServerConnection,
     id: str,
     snippet: str,
+    parameters: EngineParameters,
     model_manager: ModelManager,
 ):
     async def streaming_callback(tokens):
@@ -40,7 +41,6 @@ async def complete_handler(
         await respond_error(websocket, id, "No model loaded")
         return
 
-    parameters = EngineParameters()
     final = await current_engine.complete_streaming(
         parameters,
         snippet,
@@ -57,10 +57,11 @@ async def handler(websocket: ServerConnection, model_manager: ModelManager):
                 parsed = json.loads(message)
                 id = parsed.get("id")
                 params = parsed.get("params")
+                parameters = EngineParameters(**parsed.get("parameters"))
                 match parsed["method"]:
                     case "complete":
                         await complete_handler(
-                            websocket, id, params["snippet"], model_manager
+                            websocket, id, params["snippet"], parameters, model_manager
                         )
                     case "cancel":
                         engine = model_manager.current_engine()
