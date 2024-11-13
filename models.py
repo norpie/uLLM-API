@@ -1,9 +1,11 @@
 from enum import Enum
 import time
+import os
 
 from exllamav2.generator.base import threading
 from engines.engine import Engine, EngineType
 from engines.exllamav2 import ExLlamaV2Engine
+from engines.llama_cpp import LlamaCppEngine
 from data import DataDir
 
 
@@ -25,16 +27,17 @@ class ModelManager:
         self.timeout_sec = 900
         self.running = False
         self.timer_thread = None
-        self.used = False
+        self.used = time.time()
 
-    def load_model(self, engine: EngineType, model_name: str, timeout_sec: int = 900) -> None:
+    def load_model(
+        self, engine: EngineType, model_name: str, timeout_sec: int = 900
+    ) -> None:
         self.timeout_sec = timeout_sec
-        if model_name not in self.list_models():
+        list = self.list_models()
+        if model_name not in list:
             raise ValueError(f"Model {model_name} not found")
-
         if self.engine is not None:
             self.engine.unload_model()
-
         try:
             self.status = ModelStatus.LOADING
             self.engine_type = engine
@@ -43,7 +46,7 @@ class ModelManager:
             )
             self.engine.load_model()
             self.status = ModelStatus.LOADED
-            self.model_name = model_name + " (" + engine.value + ")"
+            self.model_name = model_name
             self.start_timer()
         except Exception as e:
             self.status = ModelStatus.ERROR
@@ -65,7 +68,7 @@ class ModelManager:
 
     def list_models(self) -> list[str]:
         model_path = self.data_dir.get_model_path()
-        return [f.name for f in model_path.iterdir() if f.is_dir()]
+        return [f.name for f in model_path.iterdir()]
 
     def start_timer(self):
         if not self.running:
@@ -76,18 +79,28 @@ class ModelManager:
     def check_timeout(self):
         while self.running:
             time.sleep(1)  # sleep for 1 second
-            if not self.used:
+            since_used = time.time() - self.used
+            if since_used > self.timeout_sec:
+                print("Timeout reached, unloading model")
                 self.used = False
                 self.unload_model()
                 break
 
     def current_engine(self) -> Engine | None:
         # Start timeout timer
-        self.used = True
+        self.used = time.time()
+        if (
+            self.status == ModelStatus.UNLOADED
+            and self.model_name is not None
+            and self.engine_type is not None
+        ):
+            self.load_model(self.engine_type, self.model_name)
         return self.engine
 
     def get_engine(self, engine: EngineType, path) -> Engine:
         if engine == EngineType.EXLLAMAV2:
             return ExLlamaV2Engine(path)
+        if engine == EngineType.LLAMA_CPP:
+            return LlamaCppEngine(path)
         else:
             raise NotImplementedError(f"Engine {engine} not implemented")
