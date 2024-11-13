@@ -57,9 +57,9 @@ async def handler(websocket: ServerConnection, model_manager: ModelManager):
                 parsed = json.loads(message)
                 id = parsed.get("id")
                 params = parsed.get("params")
-                parameters = EngineParameters(**parsed.get("parameters"))
                 match parsed["method"]:
                     case "complete":
+                        parameters = EngineParameters.from_dict(params.get("engine_parameters"))
                         await complete_handler(
                             websocket, id, params["snippet"], parameters, model_manager
                         )
