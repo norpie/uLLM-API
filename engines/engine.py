@@ -1,7 +1,9 @@
 from enum import Enum
+import json
 import asyncio
 from typing import Awaitable, Callable, List, Tuple, Optional
 from dataclasses import dataclass, field
+
 
 @dataclass
 class EngineParameters:
@@ -35,7 +37,9 @@ class EngineParameters:
     dry_muiltiplier: Optional[float] = 0.8
     dry_base: Optional[float] = 1.75
     dry_allowed_length: Optional[int] = 2
-    dry_sequence_breakers: Optional[List[str]] = field(default_factory=lambda: ["\n", ":", "\"", "*"])
+    dry_sequence_breakers: Optional[List[str]] = field(
+        default_factory=lambda: ["\n", ":", '"', "*"]
+    )
 
     # Dynamic Temperature
     dt: Optional[bool] = False
@@ -77,6 +81,15 @@ class EngineParameters:
             if completion.endswith(stop_sequence):
                 return True, stop_sequence
         return False, ""
+
+    @staticmethod
+    def from_json(json_string: str) -> "EngineParameters":
+        data = json.loads(json_string)
+        return EngineParameters(**data)
+
+    @staticmethod
+    def from_dict(data: dict) -> "EngineParameters":
+        return EngineParameters(**{**EngineParameters().__dict__, **data})
 
 
 class Engine:
