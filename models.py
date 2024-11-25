@@ -1,6 +1,7 @@
+from dataclasses import dataclass
 from enum import Enum
 import time
-import os
+import json
 
 from exllamav2.generator.base import threading
 from engines.engine import Engine, EngineType
@@ -10,11 +11,20 @@ from data import DataDir
 
 
 class ModelStatus(Enum):
-    NO_MODEL = "No model loaded"
+    NO_MODEL = "no_model"
     LOADING = "loading"
     LOADED = "loaded"
     UNLOADED = "unloaded"
     ERROR = "error"
+
+
+@dataclass()
+class SimpleModel:
+    engine: str
+    model: str
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
 
 class ModelManager:
@@ -34,7 +44,7 @@ class ModelManager:
     ) -> None:
         self.timeout_sec = timeout_sec
         list = self.list_models()
-        if model_name not in list:
+        if not any(d["name"] == model_name for d in list):
             raise ValueError(f"Model {model_name} not found")
         if self.engine is not None:
             self.engine.unload_model()
@@ -55,20 +65,24 @@ class ModelManager:
             raise e
 
     def unload_model(self) -> None:
+        print("Unloading model")
         if self.timer_thread is not None:
             self.running = False
             self.timer_thread = None
         if self.engine is not None:
             self.engine.unload_model()
+            del self.engine
             self.engine = None
             self.status = ModelStatus.UNLOADED
 
-    def model_status(self) -> tuple[ModelStatus, EngineType | None, str | None]:
-        return self.status, self.engine_type, self.model_name
+    def model_status(self) -> dict[str, str | None]:
+        status = self.status.value
+        engine_type = self.engine_type.value if self.engine_type is not None else None
+        return {"status": status, "engine": engine_type, "model": self.model_name}
 
-    def list_models(self) -> list[str]:
+    def list_models(self) -> list[dict[str, str]]:
         model_path = self.data_dir.get_model_path()
-        return [f.name for f in model_path.iterdir()]
+        return [{"engine": "llama-cpp", "name": f.name} for f in model_path.iterdir()]
 
     def start_timer(self):
         if not self.running:
@@ -82,22 +96,16 @@ class ModelManager:
             since_used = time.time() - self.used
             if since_used > self.timeout_sec:
                 print("Timeout reached, unloading model")
-                self.used = False
+                self.used = time.time()
                 self.unload_model()
                 break
 
     def current_engine(self) -> Engine | None:
-        # Start timeout timer
         self.used = time.time()
-        if (
-            self.status == ModelStatus.UNLOADED
-            and self.model_name is not None
-            and self.engine_type is not None
-        ):
-            self.load_model(self.engine_type, self.model_name)
         return self.engine
 
     def get_engine(self, engine: EngineType, path) -> Engine:
+        print(f"Loading model {engine} from {path}")
         if engine == EngineType.EXLLAMAV2:
             return ExLlamaV2Engine(path)
         if engine == EngineType.LLAMA_CPP:
