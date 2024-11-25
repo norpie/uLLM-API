@@ -1,6 +1,6 @@
 from websockets.asyncio.server import ServerConnection, serve
 from websockets.protocol import State
-from engines.engine import EngineParameters
+from engines.engine import EngineParameters, EngineType
 from models import ModelManager
 
 import asyncio
@@ -18,7 +18,7 @@ async def respond_error(websocket: ServerConnection, id: str | None, message: st
         await websocket.send("\n" + response)
 
 
-async def respond(websocket: ServerConnection, id: str | None, result: dict):
+async def respond(websocket: ServerConnection, id: str | None, result):
     response = json.dumps({"id": id, "result": result})
     if websocket.state == State.OPEN:
         await websocket.send("\n" + response)
@@ -59,7 +59,9 @@ async def handler(websocket: ServerConnection, model_manager: ModelManager):
                 params = parsed.get("params")
                 match parsed["method"]:
                     case "complete":
-                        parameters = EngineParameters.from_dict(params.get("engine_parameters"))
+                        parameters = EngineParameters.from_dict(
+                            params.get("engine_parameters")
+                        )
                         await complete_handler(
                             websocket, id, params["snippet"], parameters, model_manager
                         )
@@ -83,10 +85,23 @@ async def handler(websocket: ServerConnection, model_manager: ModelManager):
                             websocket, id, {"models": model_manager.list_models()}
                         )
                     case "load_model":
-                        await respond(
-                            websocket, id, {"status": model_manager.model_status()}
+                        model_manager.unload_model()
+                        await respond(websocket, id, model_manager.model_status())
+                        engine, model = (
+                            EngineType.from_str(params["engine"]),
+                            params["model"],
                         )
-                        model_manager.load_model(params["engine"], params["model"])
+                        await respond(
+                            websocket,
+                            id,
+                            {
+                                "status": "loading",
+                                "model": params["model"],
+                                "engine": params["engine"],
+                            },
+                        )
+                        model_manager.load_model(engine, model)
+                        await respond(websocket, id, model_manager.model_status())
                     case _:
                         await respond_error(websocket, id, "Unknown method")
             except Exception as e:
@@ -107,5 +122,6 @@ def task(host: str, port: int, model_manager: ModelManager):
 
 
 async def run(host: str, port: int, model_manager: ModelManager):
+    print(f"Starting sockets server on {host}:{port}")
     server = await serve(lambda ws: handler(ws, model_manager), host, port)
     await server.serve_forever()
