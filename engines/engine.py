@@ -78,7 +78,7 @@ class EngineParameters:
         if not self.stop_sequences:
             return False, ""
         for stop_sequence in self.stop_sequences:
-            if completion.endswith(stop_sequence):
+            if stop_sequence in completion:
                 return True, stop_sequence
         return False, ""
 
@@ -129,3 +129,11 @@ class EngineType(Enum):
     EXLLAMAV2 = "exllamav2"
     LLAMA_CPP = "llama-cpp"
     TRANSFORMERS = "transformers"
+
+    @staticmethod
+    def from_str(s: str) -> "EngineType":
+        for engine in EngineType:
+            if engine.value == s:
+                print(f"Determine engine type: {engine} for {s}")
+                return engine
+        raise ValueError(f"Unknown engine type: {s}")
