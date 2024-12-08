@@ -84,6 +84,9 @@ async def handler(websocket: ServerConnection, model_manager: ModelManager):
                         await respond(
                             websocket, id, {"models": model_manager.list_models()}
                         )
+                    case "unload_model":
+                        model_manager.unload_model()
+                        await respond(websocket, id, model_manager.model_status())
                     case "load_model":
                         model_manager.unload_model()
                         await respond(websocket, id, model_manager.model_status())
