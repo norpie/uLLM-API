@@ -43,6 +43,7 @@ class ModelManager:
         self, engine: EngineType, model_name: str, timeout_sec: int = 900
     ) -> None:
         self.timeout_sec = timeout_sec
+        self.used = time.time()
         list = self.list_models()
         if not any(d["name"] == model_name for d in list):
             raise ValueError(f"Model {model_name} not found")
@@ -87,6 +88,7 @@ class ModelManager:
     def start_timer(self):
         if not self.running:
             self.running = True
+            self.used = time.time()
             self.timer_thread = threading.Thread(target=self.check_timeout)
             self.timer_thread.start()
 
