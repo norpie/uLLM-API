@@ -82,6 +82,7 @@ class Request:
                         responder
                     )
                 case "status":
+                    print("status")
                     return await Response.new_result(
                         id, model_manager.model_status()
                     ).send(responder)
@@ -142,8 +143,8 @@ class Request:
             return await Response.new_error(id, str(e)).send(responder)
 
     @staticmethod
-    def from_json(json) -> "Request":
-        data = json.loads(json)
+    def from_json(input) -> "Request":
+        data = json.loads(input)
         return Request(**data)
 
 
