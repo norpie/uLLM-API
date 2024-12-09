@@ -1,8 +1,10 @@
+import asyncio
 import pika
 import json
 import functools
 
 from models import ModelManager
+from request import IResponder, Request, Response
 
 
 def start(
@@ -52,18 +54,55 @@ def run(
     sub.basic_consume(queue, on_message_callback=callback_datad)
 
     try:
+        print("Starting consuming")
         sub.start_consuming()
+        print("Consuming started")
     except KeyboardInterrupt:
+        print("Stopping consuming")
         sub.stop_consuming()
+        print("Consuming stopped")
+    connection.close()
+    print("Connection closed")
 
 
-def callback(channel, method, properties, body, model_manager, reply_queue):
+class RabbitMQResponder(IResponder):
+    def __init__(self, channel, reply_queue):
+        self.channel = channel
+        self.reply_queue = reply_queue
+
+    async def raw_response(self, response):
+        self.channel.basic_publish(
+            exchange="", routing_key=self.reply_queue, body=response.toJSON()
+        )
+
+    async def response(self, response):
+        await self.raw_response(response)
+
+    async def intermediate_response(self, response):
+        await self.raw_response(response)
+
+
+def sync(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return asyncio.get_event_loop().run_until_complete(f(*args, **kwargs))
+
+    return wrapper
+
+
+@sync
+async def callback(channel, method, properties, body, model_manager, reply_queue):
+    print("Received message")
+    responder = RabbitMQResponder(channel, reply_queue)
     try:
-        dict = json.loads(body)
-        body = json.dumps(model_manager.model_status())
-    except json.JSONDecodeError as e:
-        body = json.dumps({"error": "Invalid message"})
+        print(f"Handling request: {str(body)}")
+        request = Request.from_json(body)
+        print(f"Request: {request}")
+        await request.handle(model_manager, responder)
+        print("Request handled")
     except Exception as e:
-        body = json.dumps({"error": "Internal error"})
-    channel.basic_publish(exchange="", routing_key=reply_queue, body=body)
+        print(f"Error handling request: {str(e)}")
+        await Response.new_no_id_error(str(e)).send(responder)
     channel.basic_ack(delivery_tag=method.delivery_tag)
