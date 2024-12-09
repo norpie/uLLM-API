@@ -4,4 +4,4 @@ uvicorn
 rich
 tokenizers
 websockets
-rabbitmq
+pika
