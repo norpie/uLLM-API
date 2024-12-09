@@ -38,6 +38,55 @@ def parse():
         help="The port to run the websocket server on.",
     )
     parser.add_argument(
+        "--rabbitmq",
+        type=bool,
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="Whether to run the rabbitmq server.",
+    )
+    parser.add_argument(
+        "--rabbitmq-host",
+        type=str,
+        default="localhost",
+        help="The host to run the rabbitmq server on.",
+    )
+    parser.add_argument(
+        "--rabbitmq-port",
+        type=int,
+        default=5672,
+        help="The port to run the rabbitmq server on.",
+    )
+    parser.add_argument(
+        "--rabbitmq-vhost",
+        type=str,
+        default="/",
+        help="The vhost to use for rabbitmq.",
+    )
+    parser.add_argument(
+        "--rabbitmq-queue",
+        type=str,
+        default="ullm",
+        help="The queue to listen on for rabbitmq.",
+    )
+    parser.add_argument(
+        "--rabbitmq-reply-queue",
+        type=str,
+        default="ullm.reply",
+        help="The queue ullm publishes responses to.",
+    )
+    parser.add_argument(
+        "--rabbitmq-username",
+        type=str,
+        default="guest",
+        help="The username for rabbitmq.",
+    )
+    parser.add_argument(
+        "--rabbitmq-password",
+        type=str,
+        default="guest",
+        help="The password for rabbitmq.",
+    )
+    parser.add_argument(
         "--data-dir",
         type=str,
         default="$XDG_DATA_HOME/ullm-api",
