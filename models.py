@@ -6,7 +6,7 @@ import json
 from exllamav2.generator.base import threading
 from engines.engine import Engine, EngineType
 from engines.exllamav2 import ExLlamaV2Engine
-from engines.llama_cpp import LlamaCppEngine
+# from engines.llama_cpp import LlamaCppEngine
 from data import DataDir
 
 
@@ -110,7 +110,7 @@ class ModelManager:
         print(f"Loading model {engine} from {path}")
         if engine == EngineType.EXLLAMAV2:
             return ExLlamaV2Engine(path)
-        if engine == EngineType.LLAMA_CPP:
-            return LlamaCppEngine(path)
+        # if engine == EngineType.LLAMA_CPP:
+            # return LlamaCppEngine(path)
         else:
             raise NotImplementedError(f"Engine {engine} not implemented")
