@@ -1,7 +1,7 @@
 import json
 
 from dataclasses import dataclass
-from engines.engine import Engine, EngineParameters
+from engines.engine import Engine, EngineType, EngineParameters
 from models import ModelManager
 from typing import Optional, Union
 
@@ -129,7 +129,7 @@ class Request:
                             },
                         )
                     )
-                    engine = Engine.from_str(self.params["engine"])  # type: ignore
+                    engine = EngineType.from_str(self.params["engine"])  # type: ignore
                     model = self.params["model"]  # type: ignore
                     model_manager.load_model(engine, model)
                     return await Response.new_result(
