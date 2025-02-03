@@ -41,7 +41,7 @@ def run(host: str, port: int, model_manager: ModelManager):
         model_manager.unload_model()
         return {"status": model_manager.model_status()}
 
-    @app.get("/complete")
+    @app.post("/complete")
     def complete(req: CompletionRequest):
         engine = model_manager.current_engine()
         if engine is None:
