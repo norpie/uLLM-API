@@ -17,4 +17,4 @@ EXPOSE 8080
 
 COPY . .
 
-CMD [ "python3.12", "./main.py", "--data-dir", "/data", "--rabbitmq", "--rabbitmq-host", "rabbitmq" ]
+CMD [ "python3.12", "./main.py", "--data-dir", "/data", "--http", "--host", "0.0.0.0", "--port", "8080" ]
