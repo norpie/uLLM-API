@@ -32,7 +32,7 @@ def run(host: str, port: int, model_manager: ModelManager):
         try:
             engine_type = EngineType[engine]
             model_manager.load_model(engine_type, model_name)
-            return {"status": model_manager.model_status()}
+            return model_manager.model_status()
         except ValueError as e:
             return {"error": str(e)}
 
