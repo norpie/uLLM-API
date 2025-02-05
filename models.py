@@ -34,13 +34,13 @@ class ModelManager:
         self.engine_type = None
         self.status = ModelStatus.NO_MODEL
         self.model_name = None
-        self.timeout_sec = 900
+        self.timeout_sec = 300
         self.running = False
         self.timer_thread = None
         self.used = time.time()
 
     def load_model(
-        self, engine: EngineType, model_name: str, timeout_sec: int = 900000
+        self, engine: EngineType, model_name: str, timeout_sec: int = 300
     ) -> None:
         self.timeout_sec = timeout_sec
         self.used = time.time()
