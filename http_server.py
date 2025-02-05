@@ -36,10 +36,14 @@ def run(host: str, port: int, model_manager: ModelManager):
         except ValueError as e:
             return {"error": str(e)}
 
+    @app.get("/status")
+    def status():
+        return model_manager.model_status()
+
     @app.delete("/models")
     def unload_model():
         model_manager.unload_model()
-        return {"status": model_manager.model_status()}
+        return model_manager.model_status()
 
     @app.post("/complete")
     def complete(req: CompletionRequest):
