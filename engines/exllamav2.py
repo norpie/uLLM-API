@@ -1,12 +1,8 @@
 import time
+import torch
 from typing import Awaitable, Callable
 from engines.engine import Engine, EngineParameters
-from exllamav2 import (
-    ExLlamaV2,
-    ExLlamaV2Config,
-    ExLlamaV2Cache,
-    ExLlamaV2Tokenizer,
-)
+from exllamav2 import ExLlamaV2, ExLlamaV2Config, ExLlamaV2Cache, ExLlamaV2Tokenizer
 
 from exllamav2.generator import ExLlamaV2StreamingGenerator, ExLlamaV2Sampler
 
@@ -31,15 +27,18 @@ class ExLlamaV2Engine(Engine):
         self.settings = ExLlamaV2Sampler.Settings()
         self.apply_parameters(EngineParameters())
 
+        self.generator.warmup()
+
     def unload_model(self) -> None:
         if self.model is None:
             return
         self.model.unload()
-        self.model = None
-        self.cache = None
-        self.tokenizer = None
-        self.generator = None
-        self.settings = None
+        del self.model
+        del self.cache
+        del self.tokenizer
+        del self.generator
+        del self.settings
+        torch.cuda.empty_cache()
 
     def apply_parameters(self, parameters: EngineParameters) -> None:
         if self.settings is None or self.tokenizer is None:
