@@ -10,9 +10,16 @@ def main():
 
     import models
     model_manager = models.ModelManager(data_dir)
+
+    import embed
+    embed_manager = embed.EmbedManager()
+
     if args.http:
         import http_server
-        http_server.start(args.host, args.http_port, model_manager)
+        http_server.start(args.host,
+                          args.http_port,
+                          model_manager,
+                          embed_manager)
     if args.sockets:
         import sockets_server
         sockets_server.start(args.host, args.sockets_port, model_manager)

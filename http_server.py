@@ -1,22 +1,27 @@
+import json
 from fastapi import FastAPI
 from pydantic import BaseModel
 from models import ModelManager
+from embed import EmbedManager
 from engines.engine import EngineType, EngineParameters
 import uvicorn
 
 
-class CompletionRequest(BaseModel):
+class TextRequest(BaseModel):
     text: str
 
 
-def start(host: str, port: int, model_manager: ModelManager):
+def start(host: str,
+          port: int,
+          model_manager: ModelManager,
+          embed_manager: EmbedManager):
     import threading
 
-    thread = threading.Thread(target=run, args=(host, port, model_manager))
+    thread = threading.Thread(target=run, args=(host, port, model_manager, embed_manager))
     thread.start()
 
 
-def run(host: str, port: int, model_manager: ModelManager):
+def run(host: str, port: int, model_manager: ModelManager, embed_manager: EmbedManager):
     app = FastAPI()
 
     @app.get("/ping")
@@ -40,13 +45,17 @@ def run(host: str, port: int, model_manager: ModelManager):
     def status():
         return model_manager.model_status()
 
+    @app.post("/embed")
+    def embed(req: TextRequest):
+        return { "embeddings": embed_manager.embed(req.text) }
+
     @app.delete("/models")
     def unload_model():
         model_manager.unload_model()
         return model_manager.model_status()
 
     @app.post("/complete")
-    def complete(req: CompletionRequest):
+    def complete(req: TextRequest):
         engine = model_manager.current_engine()
         if engine is None:
             return {"error": "No model loaded"}
